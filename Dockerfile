@@ -57,11 +57,6 @@ RUN ls -al /khaiii/build
 
 COPY --from=base /usr/local /usr/local
 
-RUN echo "[/usr/local/bin]\n" && tree /usr/local/bin
-RUN echo "[/usr/local/include]\n" && tree /usr/local/include
-RUN echo "[/usr/local/libd]\n" && tree -L 2 /usr/local/lib
-RUN echo "[/usr/local/share]\n" && tree /usr/local/share
-
 RUN apt-get install -y language-pack-ko
 RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
