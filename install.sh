@@ -34,10 +34,10 @@ scaffolding() {
 reset_volume() {
     local tmp_dir=$(mktemp -d)
     if [[ -d $volume_kai ]]; then
-        cp runtime/run.py $tmp_dir
+        cp runtime/*.py $tmp_dir
         rm -rf $volume_kai
         mkdir -p $volume_kai
-        cp -r $tmp_dir/* $volume_kai
+        cp -r $tmp_dir/*.py $volume_kai
     fi
 }
 remove_container() {
@@ -51,16 +51,16 @@ remove_container() {
     fi
 }
 
-download_repo() {
-    step "downloading khaii repo..."
-    if [[ -d khaiii ]]; then
-        ok "khaiii repo already exists. skipping..."
-    else
-        git clone https://github.com/kakao/khaiii.git
-        ok "repo downloaded"
-    fi
+# download_repo() {
+#     step "downloading khaii repo..."
+#     if [[ -d khaiii ]]; then
+#         ok "khaiii repo already exists. skipping..."
+#     else
+#         git clone https://github.com/kakao/khaiii.git
+#         ok "repo downloaded"
+#     fi
     
-}
+# }
 build_khaii() {
     step "building image $kai_img_name...(it takes several minutes)"
     docker build -t $kai_img_name .
@@ -77,6 +77,5 @@ run_khaii() {
     docker exec $kai_con_name cat install.log >> $log_base_path
 }
 scaffolding
-download_repo
 build_khaii
 run_khaii
