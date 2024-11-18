@@ -3,8 +3,10 @@
 # 설치
 
 ```bash
-docker build -t kai-run .
+./install.sh
 ```
+
+`khaiii` 소스코드를 내려받아서 빌드 후 컨테이너를 실행합니다.(name: `kai`)
 
 # starting container
 

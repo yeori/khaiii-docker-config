@@ -3,26 +3,40 @@ import sys
 import os
 import locale
 
-api = KhaiiiApi()
-ws_dir = os.path.abspath('/ws')
-res_file_path = os.path.join(ws_dir, 'res.txt')
+from plain_format import PlainFormatter
+from json_format import JsonFormatter
 
-print(f"encoding: {sys.stdin.encoding}")
-print(f"Locale encoding: {locale.getpreferredencoding()}")
+def parse_args():
+    """
+    Parses command-line arguments.
 
-if len(sys.argv) > 0:
-    sentence = ' '.join(sys.argv[1:])
-    sentence = sentence.encode('utf-8').decode()
-else:
-    sentence = '형태소 분석기입니다.'
-print(sentence)
-with open(res_file_path, 'w', encoding='utf-8') as f:
-    for word in api.analyze(sentence):
-        size = len(word.morphs)
-        f.write(f'{word.lex}\t')
-        for idx, m in enumerate(word.morphs):
-            delim = idx + 1 != size and '+' or ''
-            # s = m.begin
-            # e = s + m.length
-            f.write(f'{m.lex}/{m.tag}{delim}')
-        f.write('\n')
+    Returns:
+        tuple: (format, sentence)
+               format: one of "plain" or "json".
+               sentence: the remaining arguments joined as a string.
+    """
+    args = sys.argv[1:]
+    output_format = "plain"
+
+    for i, arg in enumerate(args):
+        if arg == "-f":
+            if i + 1 < len(args):
+                output_format = args[i + 1]
+                args = args[:i] + args[i + 2:]
+                break
+    if(len(args) == 0):
+        args = ['한글 형태소 분석기 Khaiii']
+    sentence = ' '.join(args)
+    return output_format, sentence
+    
+def main():
+    api = KhaiiiApi()
+
+    args = sys.argv[1:]
+    output_format, sentence = parse_args()
+    formatter = JsonFormatter() if output_format == "json" else PlainFormatter()
+    print(formatter.format(api.analyze(sentence)))
+
+
+if __name__ == "__main__":
+    main()

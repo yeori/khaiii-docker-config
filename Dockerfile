@@ -3,63 +3,56 @@
 #
 FROM ubuntu:18.04 as base
 
-ARG PYTHON_VERSION=3.11
+RUN apt-get update && apt install -y git
+RUN echo "Downloading khaiii repo" \
+  && git clone https://github.com/kakao/khaiii.git \
+  && echo "repo downloaded"
+
 WORKDIR /khaiii
 
-RUN apt-get update
-RUN apt-get install -y language-pack-ko
-RUN locale-gen en_US.UTF-8
-RUN update-locale LANG=en_US.UTF-8
+RUN apt-get install -y \ 
+  build-essential python3 python3-pip git cmake \
+  && pip3 install --upgrade pip
 
-RUN apt-get install -y build-essential
-RUN apt-get install -y python3
-RUN apt-get install -y python3-pip
-RUN pip3 install --upgrade pip
-RUN apt-get install -y cmake
+RUN echo "[Stage] base" >> install.log \
+  && echo " * Python\n$(python3 --version 2>&1)" >> install.log \
+  && echo " * PIP\n$(pip --version 2>&1)" >> install.log \
+  && echo " * CMake\n$(cmake --version 2>&1)" >> install.log \
+  && echo " * g++\n$(g++ --version 2>&1)" >> install.log \
+  && echo "\n"
 
-RUN touch install.log
-RUN echo "[Python]\n * $(python3 --version 2>&1)" >> install.log
-RUN echo "[PIP]\n * $(pip --version 2>&1)" >> install.log
-RUN echo "[CMake]\n * $(cmake --version 2>&1)" >> install.log
-RUN echo "[g++]\n$(g++ --version 2>&1)" >> install.log
+# COPY ./khaiii/ .
 
-COPY ./khaiii/ .
 RUN mkdir build
 
-RUN cd build && cmake ..
-RUN cd build && make all
-RUN cd build && make resource
+RUN cd build && cmake .. \
+  && make all \
+  && make resource \
+  && make install \
+  && make package_python \
+  && cd package_python \
+  && pip install .
 
-RUN cd build && make install
-RUN cd build && make package_python \
-  && cd package_python && pip install .
-
-ENV LANG=en_US.UTF-8
-
-VOLUME [ "/ws" ]
-#
-# Runtime image
-#
+### runtime image ##########################################
 FROM ubuntu:18.04 as runtime
 
 ENV LANG=en_US.UTF-8
 
-RUN apt-get update
-RUN apt-get install -y python3
-RUN apt-get install -y python3-pip
-RUN pip3 install --upgrade pip
-RUN apt-get install -y tree
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    tree \
+    language-pack-ko \
+  && pip3 install --upgrade pip
 
 WORKDIR /khaiii
+COPY --from=base /khaiii/install.log .
 COPY --from=base /khaiii/build build
-
-RUN ls -al /khaiii/build
-
 COPY --from=base /usr/local /usr/local
 
-RUN apt-get install -y language-pack-ko
-RUN locale-gen en_US.UTF-8
-RUN update-locale LANG=en_US.UTF-8
+RUN locale-gen en_US.UTF-8 \
+  && update-locale LANG=en_US.UTF-8
 
 VOLUME [ "/ws" ]
 
